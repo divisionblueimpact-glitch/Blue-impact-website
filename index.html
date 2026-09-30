@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="tl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>D4 Division</title>
- <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#4b3fd1"><link rel="apple-touch-icon" href="icon-192.png"><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js"))</script>
+<title>Blue Impact App</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#4b3fd1"><link rel="apple-touch-icon" href="icon-192.png"><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js"))</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Instrument+Sans:wght@400;600&display=swap">
 <style>
 :root{--bg:#f3f1fa;--card:#fff;--ink:#1c1a2e;--mut:#6b6885;--acc:#4b3fd1;--gold:#c8912a;--line:#dcd8ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -41,14 +41,27 @@ input,textarea,select{width:100%;padding:10px;border:1px solid var(--line);borde
 .empty{color:var(--mut);padding:14px;border:1px dashed var(--line);border-radius:14px}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .pre{white-space:pre-wrap}
-</style></head><body>
+body:not(.in) header,body:not(.in) nav,body:not(.in) main{display:none}
+#gate{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+body:not(.in) #gate{display:flex}
+#gate img{width:150px;height:150px;border-radius:50%;margin-bottom:14px}
+#gate h1{font-size:2.2rem}
+#gate form{width:min(92vw,360px);text-align:left;margin-top:14px}
+body.chk #gform{display:none}
+#gform .btn{flex:1;padding:12px}
+#gmsg{margin-top:12px;color:var(--mut);min-height:1.4em}
+</style></head><body class="chk">
+<div id="gate"><img src="icon-512.png" alt="Division 4 Blue Impact"><h1>Blue Impact</h1><p class="mut">Division 4 · Mag-login para makapasok</p>
+<form id="gform"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="pw" type="password" minlength="6" autocomplete="current-password" required></label>
+<div class="row" style="justify-content:stretch"><button class="btn ghost" value="up">Sign up</button><button class="btn" value="in">Login</button></div></form>
+<div id="gmsg">Sandali lang…</div></div>
 <header><h1>D4<b>.</b>Division</h1><p><span id="who">Nagloload…</span> <button class="btn ghost" id="auth">Login</button></p></header>
 <nav id="nav"></nav>
 <main id="app"></main>
 <dialog id="dlg"><form id="frm" method="dialog"></form></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const SB_URL="https://ctoerqoxnvrmkzzcfusi.supabase.co",SB_KEY="sb_publishable_FLAjWYZyiwl8l_IvFhxEWQ_asWW7yop";
+const SB_URL="https://ctoerqoxnvrmkzzcfusi.supabase.co",SB_KEY="PASTE_SUPABASE_ANON_KEY";
 const TABS=[["home","Home"],["events","Events"],["members","Members"],["rules","Rules"],["ach","Achievements"],["points","Update Points"],["comics","Comics"],["roles","Roles"]];
 const P={event:["Rida","Shinigami"],banner:["Rida","Hisho"],remind:["Rida","Chui"],member:["Rida","Jinji"],points:["Rida","Enjo"],admin:["Rida"]};
 const ROLES=["Rida","Hisho","Chui","Shinigami","Jinji","Enjo"];
@@ -171,7 +184,13 @@ document.addEventListener("click",e=>{
  if(d.rules){const r=items.find(i=>i.id==="rules");$("#frm").innerHTML=`<h2>Division rules</h2><label>Rules<textarea name="text" rows="10" required>${esc(r?.text||"")}</textarea></label><div class="row"><button class="btn ghost" value="x" formnovalidate>Cancel</button><button class="btn" value="ok">Save</button></div>`;$("#frm").onsubmit=async ev=>{if(ev.submitter?.value!=="ok")return;ev.preventDefault();await wr(()=>sb.from("items").upsert({id:"rules",k:"rules",data:{text:new FormData($("#frm")).get("text")}}));$("#dlg").close()};$("#dlg").showModal()}
 });
 document.addEventListener("change",e=>{const x=e.target.closest("[data-setrole]");if(x)wr(()=>sb.from("profiles").update({role:x.value||null}).eq("id",x.dataset.setrole))});
+const gm=t=>{$("#gmsg").textContent=t||""};
+const tl=m=>/invalid login/i.test(m)?"Mali ang email o password, o wala ka pang account. Pindutin ang Sign up kung bago ka.":/already registered/i.test(m)?"May account na ang email na ito. Pindutin ang Login.":m;
+$("#gform").onsubmit=async e=>{e.preventDefault();const v=e.submitter?.value,fd=new FormData($("#gform")),c={email:fd.get("email"),password:fd.get("pw")};gm("Sandali lang…");
+ const r=v==="up"?await sb.auth.signUp(c):await sb.auth.signInWithPassword(c);
+ if(r.error)return gm(tl(r.error.message));
+ if(v==="up"&&!r.data.session)gm("I-check ang email mo para i-confirm ang account.")};
 render();
-if(SB_URL.includes("PASTE")){$("#who").textContent="Ilagay muna ang Supabase URL at key sa index.html"}
-else{sb.auth.onAuthStateChange((_,ses)=>{me=ses?.user?.id||null;load()});setInterval(load,30000)}
+if(SB_URL.includes("PASTE")||SB_KEY.includes("PASTE")){document.body.classList.remove("chk");gm("Ilagay muna ang Supabase key sa index.html")}
+else{sb.auth.onAuthStateChange((_,ses)=>{me=ses?.user?.id||null;document.body.classList.remove("chk");document.body.classList.toggle("in",!!me);gm("");if(me)load();else{items=[];profs=[];roles={};render()}});setInterval(()=>{if(me)load()},30000)}
 </script></body></html>
