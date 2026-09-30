@@ -47,21 +47,25 @@ body:not(.in) #gate{display:flex}
 #gate img{width:150px;height:150px;border-radius:50%;margin-bottom:14px}
 #gate h1{font-size:2.2rem}
 #gate form{width:min(92vw,360px);text-align:left;margin-top:14px}
-body.chk #gform{display:none}
+body.chk #gform,body.rec #gform{display:none}
+#rform{display:none}body.rec #rform{display:block}
+#forgot{background:none;border:0;color:var(--acc);font:inherit;cursor:pointer;margin-top:10px;padding:0}
 #gform .btn{flex:1;padding:12px}
 #gmsg{margin-top:12px;color:var(--mut);min-height:1.4em}
 </style></head><body class="chk">
 <div id="gate"><img src="icon-512.png" alt="Division 4 Blue Impact"><h1>Blue Impact</h1><p class="mut">Division 4 · Mag-login para makapasok</p>
 <form id="gform"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="pw" type="password" minlength="6" autocomplete="current-password" required></label>
-<div class="row" style="justify-content:stretch"><button class="btn ghost" value="up">Sign up</button><button class="btn" value="in">Login</button></div></form>
+<div class="row" style="justify-content:stretch"><button class="btn ghost" value="up">Sign up</button><button class="btn" value="in">Login</button></div><button type="button" id="forgot">Nakalimutan ang password?</button></form>
+<form id="rform"><label>Bagong password<input name="np" type="password" minlength="6" autocomplete="new-password" required></label><div class="row" style="justify-content:stretch"><button class="btn">I-save ang bagong password</button></div></form>
 <div id="gmsg">Sandali lang…</div></div>
 <header><h1>D4<b>.</b>Division</h1><p><span id="who">Nagloload…</span> <button class="btn ghost" id="auth">Login</button></p></header>
 <nav id="nav"></nav>
 <main id="app"></main>
 <dialog id="dlg"><form id="frm" method="dialog"></form></dialog>
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const SB_URL="https://ctoerqoxnvrmkzzcfusi.supabase.co",SB_KEY="sb_publishable_FLAjWYZyiwl8l_IvFhxEWQ_asWW7yop";
+const SB_URL=window.SB_URL||"PASTE",SB_KEY=window.SB_KEY||"PASTE";
 const TABS=[["home","Home"],["events","Events"],["members","Members"],["rules","Rules"],["ach","Achievements"],["points","Update Points"],["comics","Comics"],["roles","Roles"]];
 const P={event:["Rida","Shinigami"],banner:["Rida","Hisho"],remind:["Rida","Chui"],member:["Rida","Jinji"],points:["Rida","Enjo"],admin:["Rida"]};
 const ROLES=["Rida","Hisho","Chui","Shinigami","Jinji","Enjo"];
@@ -190,7 +194,10 @@ $("#gform").onsubmit=async e=>{e.preventDefault();const v=e.submitter?.value,fd=
  const r=v==="up"?await sb.auth.signUp(c):await sb.auth.signInWithPassword(c);
  if(r.error)return gm(tl(r.error.message));
  if(v==="up"&&!r.data.session)gm("I-check ang email mo para i-confirm ang account.")};
+let rec=false;
+$("#forgot").onclick=async()=>{const em=new FormData($("#gform")).get("email");if(!em)return gm("Ilagay muna ang email mo sa taas.");gm("Sandali lang…");const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.href.split("#")[0].split("?")[0]});gm(r.error?tl(r.error.message):"Nagpadala kami ng link sa email mo. Buksan iyon para magpalit ng password.")};
+$("#rform").onsubmit=async e=>{e.preventDefault();gm("Sandali lang…");const r=await sb.auth.updateUser({password:new FormData($("#rform")).get("np")});if(r.error)return gm(r.error.message);rec=false;const B=document.body.classList;B.remove("rec");B.add("in");gm("");load()};
 render();
 if(SB_URL.includes("PASTE")||SB_KEY.includes("PASTE")){document.body.classList.remove("chk");gm("Ilagay muna ang Supabase key sa index.html")}
-else{sb.auth.onAuthStateChange((_,ses)=>{me=ses?.user?.id||null;document.body.classList.remove("chk");document.body.classList.toggle("in",!!me);gm("");if(me)load();else{items=[];profs=[];roles={};render()}});setInterval(()=>{if(me)load()},30000)}
+else{sb.auth.onAuthStateChange((ev,ses)=>{if(ev==="PASSWORD_RECOVERY")rec=true;me=ses?.user?.id||null;const B=document.body.classList;B.remove("chk");B.toggle("rec",rec);B.toggle("in",!!me&&!rec);if(!rec)gm("");if(me&&!rec)load();else if(!me){items=[];profs=[];roles={};render()}});setInterval(()=>{if(me)load()},30000)}
 </script></body></html>
